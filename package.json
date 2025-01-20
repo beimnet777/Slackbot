@@ -12,6 +12,7 @@
   "dependencies": {
     "@slack/bolt": "^4.2.0",
     "axios": "^1.7.9",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "express": "^5.0.1"
   }
 }
