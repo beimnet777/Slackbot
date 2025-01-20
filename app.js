@@ -27,25 +27,26 @@ receiver.router.post('/slack/events', (req, res) => {
 slackApp.event('app_mention', async ({ event, say }) => {
   console.log('Received app_mention event:');
   try {
-    const userMessage = event.text;
     console.log(userMessage)
+    const userMessage = event.text;
 
     // Call OpenAI API
-    const response = await axios.post(
-      process.env.GPT_URL,
-      {
-        model: process.env.MODEL_ID,
-        messages: [{ role: 'user', content: userMessage }],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   process.env.GPT_URL,
+    //   {
+    //     model: process.env.MODEL_ID,
+    //     messages: [{ role: 'user', content: userMessage }],
+    //   },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    //       'Content-Type': 'application/json',
+    //     },
+    //   }
+    // );
 
-    const botReply = response.data.choices[0].message.content;
+    // const botReply = response.data.choices[0].message.content;
+    const botReply = "Test Purpose message"
 
     // Send response to Slack
     await say(botReply);
