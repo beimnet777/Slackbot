@@ -25,8 +25,10 @@ receiver.router.post('/slack/events', (req, res) => {
 
 // Listen for mentions in Slack
 slackApp.event('app_mention', async ({ event, say }) => {
+  console.log('Received app_mention event:');
   try {
     const userMessage = event.text;
+    console.log(userMessage)
 
     // Call OpenAI API
     const response = await axios.post(
