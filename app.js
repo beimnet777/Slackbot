@@ -1,34 +1,21 @@
-const { App, ExpressReceiver } = require('@slack/bolt');
-const express = require('express');
+const { App } = require('@slack/bolt');
 const axios = require('axios');
 require('dotenv').config();
 
-// Initialize ExpressReceiver for Slack
-const receiver = new ExpressReceiver({
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
-});
-
-// Initialize Slack app
+// Initialize Slack app in Socket Mode
 const slackApp = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  receiver, // Use the custom ExpressReceiver
-});
-
-// Add a custom route to handle Slack URL verification
-receiver.router.post('/slack/events', (req, res) => {
-  if (req.body.type === 'url_verification') {
-    res.status(200).send(req.body.challenge); // Respond with the challenge
-  } else {
-    res.status(404).send('Not Found'); // Handle other types of requests (optional)
-  }
+  token: process.env.SLACK_BOT_TOKEN, // Bot token
+  appToken: process.env.SLACK_APP_TOKEN, // Socket Mode token
+  socketMode: true, // Enable Socket Mode
 });
 
 // Listen for mentions in Slack
 slackApp.event('app_mention', async ({ event, say }) => {
+  console.log("************")
   console.log('Received app_mention event:');
   try {
-    console.log(userMessage)
     const userMessage = event.text;
+    console.log(userMessage);
 
     // Call OpenAI API
     // const response = await axios.post(
@@ -46,7 +33,7 @@ slackApp.event('app_mention', async ({ event, say }) => {
     // );
 
     // const botReply = response.data.choices[0].message.content;
-    const botReply = "Test Purpose message"
+    const botReply = 'Thank you very much'
 
     // Send response to Slack
     await say(botReply);
@@ -58,9 +45,6 @@ slackApp.event('app_mention', async ({ event, say }) => {
 
 // Start the app
 (async () => {
-  const port = process.env.PORT || 3000;
-
-  // Start the Slack app with the ExpressReceiver
-  await slackApp.start(port);
-  console.log(`⚡️ Slack app is running on port ${port}`);
+  await slackApp.start();
+  console.log('⚡️ Slack app is running in Socket Mode!');
 })();
