@@ -15,7 +15,7 @@ const slackApp = new App({
 });
 
 // Add a custom route to handle Slack URL verification
-receiver.router.post('/slack/events', (req, res) => {
+receiver.router.post('', (req, res) => {
   if (req.body.type === 'url_verification') {
     res.status(200).send(req.body.challenge); // Respond with the challenge
   } else {
