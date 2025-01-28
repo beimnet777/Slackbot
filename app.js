@@ -29,25 +29,32 @@ slackApp.event('app_mention', async ({ event, client }) => {
   console.log('Received app_mention event:');
   try {
     const userMessage = event.text;
-    console.log(userMessage);
+    const cleanedMessage = userMessage.replace(/<@[\w]+>/g, '').trim();
+    console.log(cleanedMessage);
 
-    // Call OpenAI API
-    // const response = await axios.post(
-    //   process.env.GPT_URL,
-    //   {
-    //     model: process.env.MODEL_ID,
-    //     messages: [{ role: 'user', content: userMessage }],
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //   }
-    // );
+    const payload = {
+      message: cleanedMessage,
+    };
 
-    // const botReply = response.data.choices[0].message.content;
-    const botReply = 'Thank you very much'
+    const config = {
+      method: 'post',
+      url: process.env.GPT_BOT_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: payload,
+    };
+
+    console.log("=== Debugging Axios Request ===");
+    console.log("Payload:", JSON.stringify(payload, null, 2));
+    console.log("Request Config:", JSON.stringify(config, null, 2));
+
+    const response = await axios(config);
+    responseData = response.data;
+    console.log(responseData)
+
+  
+    const botReply = responseData.response; 
 
     // Send response to Slack
     
@@ -61,7 +68,10 @@ slackApp.event('app_mention', async ({ event, client }) => {
     // await say(botReply);
   } catch (error) {
     console.error('Error processing app mention:', error);
-    await say("Sorry, I couldn't process that!");
+    await client.chat.postMessage({
+      channel: event.channel, // Use the channel ID from the event
+      text: "Sorry, I couldn't process that!",
+    });
   }
 });
 
