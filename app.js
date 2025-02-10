@@ -55,11 +55,11 @@ app.get('/', (req, res) => {
 });
 
 setInterval(() => {
-  axios.get("https://chatbot-wo06.onrender.com")
+  axios.get("https://chatbot-wo06.onrender.com/api/v1/chat/")
       .catch(error => {
           console.error("Error making request:", error.message);
       });
-}, 10 * 60 * 1000);
+}, 5 * 60 * 1000);
 // Start the dummy server
 app.listen(port, () => {
   
