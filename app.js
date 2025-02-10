@@ -75,13 +75,12 @@ slackApp.event('app_mention', async ({ event, client }) => {
     const userSlackId = event.user; // Get Slack user ID from event
     const userId = userDict[userSlackId] || 'Unknown'; // Lookup ID
 
-    const addMessage = `And for the record my id is, ${userId}!`
     const cleanedMessage = userMessage.replace(/<@[\w]+>/g, '').trim();
 
-    console.log(cleanedMessage, addMessage  );
 
     const payload = {
-      message: cleanedMessage + addMessage,
+      message: cleanedMessage,
+      id: userId
     };
 
     const config = {
