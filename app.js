@@ -70,7 +70,6 @@ app.listen(port, () => {
 slackApp.event('app_mention', async ({ event, client }) => {
   console.log('Received app_mention event:');
   try {
-    console.log(userDict);
     const userMessage = event.text;
     const userSlackId = event.user; // Get Slack user ID from event
     const userId = userDict[userSlackId] || 'Unknown'; // Lookup ID
