@@ -2,6 +2,41 @@ const { App } = require('@slack/bolt');
 const axios = require('axios');
 const express = require('express');
 require('dotenv').config();
+const fs = require('fs');
+const csvParser = require('csv-parser');
+
+let userDict = {};
+
+// Utility function to read a CSV file and return an array of rows
+function readCSV(filePath) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    fs.createReadStream(filePath)
+      .pipe(csvParser())
+      .on('data', (data) => results.push(data))
+      .on('end', () => resolve(results))
+      .on('error', reject);
+  });
+}
+
+async function mergeCsvs(file) {
+    // Read both CSV files
+    const data = await readCSV(file); // expected columns: name, id
+    console.log(data)
+
+    data.forEach(row => {
+      if (row.Name) {
+        console.log("*")
+        userDict[row.Slack_ID] = row.ID;
+      }
+    });
+    console.log(userDict, "************")
+  }
+
+  mergeCsvs('merged.csv')
+    
+
+
 
 // Initialize Slack app in Socket Mode
 const slackApp = new App({
@@ -19,8 +54,15 @@ app.get('/', (req, res) => {
   res.send('Dummy server running');
 });
 
+setInterval(() => {
+  axios.get("https://chatbot-wo06.onrender.com/api/v1/chat/")
+      .catch(error => {
+          console.error("Error making request:", error.message);
+      });
+}, 5 * 60 * 1000);
 // Start the dummy server
 app.listen(port, () => {
+  
   console.log(`Dummy HTTP server running on port ${port}`);
 });
 
@@ -29,25 +71,36 @@ slackApp.event('app_mention', async ({ event, client }) => {
   console.log('Received app_mention event:');
   try {
     const userMessage = event.text;
-    console.log(userMessage);
+    const userSlackId = event.user; // Get Slack user ID from event
+    const userId = userDict[userSlackId] || 'Unknown'; // Lookup ID
 
-    // Call OpenAI API
-    // const response = await axios.post(
-    //   process.env.GPT_URL,
-    //   {
-    //     model: process.env.MODEL_ID,
-    //     messages: [{ role: 'user', content: userMessage }],
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //   }
-    // );
+    const cleanedMessage = userMessage.replace(/<@[\w]+>/g, '').trim();
 
-    // const botReply = response.data.choices[0].message.content;
-    const botReply = 'Thank you very much'
+
+    const payload = {
+      message: cleanedMessage,
+      id: userId
+    };
+
+    const config = {
+      method: 'post',
+      url: process.env.GPT_BOT_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: payload,
+    };
+
+    console.log("=== Debugging Axios Request ===");
+    console.log("Payload:", JSON.stringify(payload, null, 2));
+    console.log("Request Config:", JSON.stringify(config, null, 2));
+
+    const response = await axios(config);
+    responseData = response.data;
+    console.log(responseData)
+
+  
+    const botReply = responseData.response; 
 
     // Send response to Slack
     
@@ -61,30 +114,14 @@ slackApp.event('app_mention', async ({ event, client }) => {
     // await say(botReply);
   } catch (error) {
     console.error('Error processing app mention:', error);
-    await say("Sorry, I couldn't process that!");
+    await client.chat.postMessage({
+      channel: event.channel, // Use the channel ID from the event
+      text: "Sorry, I couldn't process that!",
+    });
   }
 });
 
 
-slackApp.event('message', async ({ event, client }) => {
-    console.log('Received DM:', event);
-    try {
-      const userMessage = event.text;
-      console.log(`User sent a DM: ${userMessage}`);
-
-      // Call OpenAI API or process the message
-      const botReply = "Hi! I'm here to help with your DM.";
-
-      // Send a response in the DM
-      await client.chat.postMessage({
-        channel: event.channel,
-        text: botReply,
-      });
-    } catch (error) {
-      console.error('Error handling DM:', error);
-    }
-  
-});
 
 // Start the app
 (async () => {
